@@ -28,8 +28,37 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.5.6'
+
+    // QueryDSL 추가
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// QueryDSL 옵션 (선택사항)
+// Q class 생성경로
+/**
+ * 별도의 옵션이 없을 경우
+ * setting > Build, Execution, Deployment > Build Tools > Gradle > Build and run using
+ * Gradle 이면 build 폴더, IntelliJ IDEA 이면 src 폴더에 생성됨
+ */
+
+// Q class 생성 경로
+def querydslDir = 'src/main/generated'
+
+// querydsl QClass 파일 생성 위치를 지정
+tasks.withType(JavaCompile) {
+    options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
+}
+
+// clean 시에 QClass 디렉토리 삭제
+clean {
+    delete file(querydslDir)
 }

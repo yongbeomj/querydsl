@@ -22,17 +22,17 @@ import static org.springframework.util.StringUtils.hasText;
 import static study.querydsl.entity.QMember.member;
 import static study.querydsl.entity.QTeam.team;
 
-public class MemberRepositoryImpl extends QuerydslRepositorySupport implements MemberRepositoryCustom {
+public class MemberRepositoryImpl implements MemberRepositoryCustom {
 
-//    private final JPAQueryFactory queryFactory;
-//
-//    public MemberRepositoryImpl(EntityManager em) {
-//        this.queryFactory = new JPAQueryFactory(em);
-//    }
+    private final JPAQueryFactory queryFactory;
 
-    public MemberRepositoryImpl() {
-        super(Member.class);
+    public MemberRepositoryImpl(EntityManager em) {
+        this.queryFactory = new JPAQueryFactory(em);
     }
+
+//    public MemberRepositoryImpl() {
+//        super(Member.class);
+//    }
 
     @Override
     public List<MemberTeamDto> search(MemberSearchCondition condition) {
@@ -55,27 +55,6 @@ public class MemberRepositoryImpl extends QuerydslRepositorySupport implements M
     }
 
     @Override
-    public List<MemberTeamDto> search(MemberSearchCondition condition) {
-        List<MemberTeamDto> result = from(member)
-                .leftJoin(member.team, team)
-                .where(
-                        usernameEq(condition.getUsername()),
-                        teamNameEq(condition.getTeamName()),
-                        ageGoe(condition.getAgeGoe()),
-                        ageLoe(condition.getAgeLoe())
-                )
-                .select(new QMemberTeamDto(
-                        member.id.as("memberId"),
-                        member.username,
-                        member.age,
-                        team.id.as("teamId"),
-                        team.name.as("teamName")))
-                .fetch();
-
-        return null;
-    }
-
-    @Override
     public Page<MemberTeamDto> searchPageSimple(MemberSearchCondition condition, Pageable pageable) {
         QueryResults<MemberTeamDto> results = queryFactory
                 .select(new QMemberTeamDto(
@@ -95,33 +74,6 @@ public class MemberRepositoryImpl extends QuerydslRepositorySupport implements M
                 .offset(pageable.getOffset()) // 시작 index
                 .limit(pageable.getPageSize()) // 한번에 가져올 개수
                 .fetchResults(); // list 조회 쿼리 + count 조회 쿼리
-
-        List<MemberTeamDto> content = results.getResults();
-        long total = results.getTotal();
-
-        return new PageImpl<>(content, pageable, total);
-    }
-
-    public Page<MemberTeamDto> searchPageSimple2(MemberSearchCondition condition, Pageable pageable) {
-        JPQLQuery<MemberTeamDto> jpaQuery = from(member)
-                .leftJoin(member.team, team)
-                .where(
-                        usernameEq(condition.getUsername()),
-                        teamNameEq(condition.getTeamName()),
-                        ageGoe(condition.getAgeGoe()),
-                        ageLoe(condition.getAgeLoe())
-                )
-                .select(new QMemberTeamDto(
-                        member.id.as("memberId"),
-                        member.username,
-                        member.age,
-                        team.id.as("teamId"),
-                        team.name.as("teamName")));
-
-        // pagination
-        // sort 오류 발생
-        // select로 시작 불가 (가독성이 떨어짐)
-        JPQLQuery<MemberTeamDto> query = getQuerydsl().applyPagination(pageable, jpaQuery);
 
         List<MemberTeamDto> content = results.getResults();
         long total = results.getTotal();
